@@ -3,6 +3,8 @@ import torch
 from torch.optim.optimizer import Optimizer
 from itertools import chain
 
+from models.constants import COMPLEX_BAYESIAN_NETWORKS, BASIC_BAYESIAN_NETWORKS
+
 
 class NoisyAdam(Optimizer):
     """
@@ -19,10 +21,18 @@ class NoisyAdam(Optimizer):
 
     @staticmethod
     def check_bayesian_and_option(network):
-        if 'BayesianLinear' not in network.__class__.__name__ and len(list(network.parameters)) > 0:
-            raise RuntimeError("This implementation only supports BayesianLinear module.")
-        elif 'BayesianLinear' in network.__class__.__name__ and network.option != 'FFG':
-            raise RuntimeError("Noisy Adam optimizer only supports fully factorized gaussian option.")
+        name = network.__class__.__name__
+        # TODO : replace this hard-coded area
+        if 'Sequential' in name:
+            return
+        for network_name in COMPLEX_BAYESIAN_NETWORKS:
+            if network_name in name:
+                return
+        for network_name in BASIC_BAYESIAN_NETWORKS:
+            if network_name not in name and len(list(network.parameters())) > 0:
+                raise RuntimeError("This implementation only supports BayesianLinear module.")
+            elif network_name in name and network.option != 'FFG':
+                raise RuntimeError("Noisy Adam optimizer only supports fully factorized gaussian option.")
 
     def __init__(self, networks, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0):
         # TODO : supports Bayesian Convolution?
@@ -43,7 +53,6 @@ class NoisyAdam(Optimizer):
                 and returns the loss.
                 
         Return:
-            state: state dictionary
         """
         loss = None
         if closure is not None:
@@ -86,7 +95,7 @@ class NoisyAdam(Optimizer):
                 bias_correction2 = 1 - beta2 ** state['step']
                 step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
 
-                p.data = torch.addcdiv(0, -step_size, exp_avg, denom)
+                p.data = torch.addcdiv(torch.zeros(1), -step_size, exp_avg, denom)
 
         return loss
 

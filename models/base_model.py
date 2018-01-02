@@ -13,6 +13,7 @@ class BaseModel(object):
         self.Tensor = torch.cuda.FloatTensor if self.gpu_ids else torch.FloatTensor
         self.LabelTensor = torch.cuda.LongTensor if self.gpu_ids else torch.LongTensor
         self.save_dir = os.path.join(opt.ckpt_dir, opt.model)
+        self.lr_scheduler = None
 
     @property
     def name(self):

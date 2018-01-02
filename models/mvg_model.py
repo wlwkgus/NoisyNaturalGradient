@@ -6,12 +6,13 @@ from torch import nn
 
 from models.base_model import BaseModel
 from models.networks import BayesianMultilayer
-from optimizers.noisy_adam import NoisyAdam
+from optimizers.noisy_kfac import NoisyKFAC
+from torch.optim import lr_scheduler
 
 
-class FFGModel(BaseModel):
+class MVGModel(BaseModel):
     def __init__(self, opt):
-        super(FFGModel, self).__init__(opt)
+        super(MVGModel, self).__init__(opt)
 
         self.gpu_ids = opt.gpu_ids
         self.batch_size = opt.batch_size
@@ -19,10 +20,13 @@ class FFGModel(BaseModel):
         self.model = BayesianMultilayer(option=opt.option, gpu_ids=self.gpu_ids, eps=opt.eps, n=opt.n, bias=False)
         if self.gpu_ids:
             self.model.cuda(device=opt.gpu_ids[0])
-        self.model_optimizer = NoisyAdam(
+        self.model_optimizer = NoisyKFAC(
             [self.model],
             lr=opt.lr,
+            t_stats=1,
+            t_inv=10,
         )
+        self.lr_scheduler = lr_scheduler.StepLR(optimizer=self.model_optimizer, step_size=30, gamma=0.5)
 
         self.result = None
 
@@ -39,7 +43,7 @@ class FFGModel(BaseModel):
 
     @property
     def name(self):
-        return 'FFGModel'
+        return 'MVGModel'
 
     def forward(self, volatile=False, is_test=False):
         self.result = self.model(Variable(self.input), is_test=is_test)
@@ -79,11 +83,7 @@ class FFGModel(BaseModel):
             self.loss = self.loss_function(self.result, Variable(self.label, requires_grad=False).cuda())
         else:
             self.loss = self.loss_function(self.result, Variable(self.label, requires_grad=False))
-        try:
-            self.loss.backward()
-        except:
-            print(self.result)
-            raise
+        self.loss.backward()
 
     def optimize_parameters(self):
         self.forward()
