@@ -78,30 +78,3 @@ class TestingOptionParser(OptionParser):
         self.parser.add_argument('--repeat_generation', type=int, default=10, help='repeat generation count per a single image')
         self.parser.add_argument('--test_count', type=int, default=20, help='test input images count')
         self.parser.add_argument('--test_dir', type=str, default='./test/', help='test dir')
-
-    def parse_args(self):
-        opt = self.parser.parse_args()
-        str_ids = str(opt.gpu_ids)
-        opt.gpu_ids = []
-        for str_id in str_ids.split(','):
-            opt.gpu_ids.append(int(str_id))
-        if len(opt.gpu_ids) > 0:
-            torch.cuda.set_device(opt.gpu_ids[0])
-
-        args = vars(opt)
-
-        print('-------- [INFO] Options --------')
-        for k, v in sorted(args.items()):
-            print('%s: %s' % (str(k), str(v)))
-
-        expr_dir = os.path.join(opt.ckpt_dir, opt.model)
-        utils.mkdir(expr_dir)
-        test_dir = os.path.join(opt.test_dir, opt.model)
-        utils.mkdir(test_dir)
-        file_name = os.path.join(expr_dir, 'opt.txt')
-        with open(file_name, 'wt') as opt_file:
-            opt_file.write(' [INFO] Options\n')
-            for k, v in sorted(args.items()):
-                opt_file.write('%s: %s\n' % (str(k), str(v)))
-        print('------------- END -------------')
-        return opt
