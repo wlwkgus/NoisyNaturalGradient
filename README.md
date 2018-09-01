@@ -36,8 +36,8 @@ Currently only MNIST dataset are currently supported, and only fully connected l
 More details in [option_parser.py](https://github.com/wlwkgus/NoisyNaturalGradient/blob/master/option_parser.py)
 
 ### Train
-    $ python train.py --model=FFG --batch_size=100 --lr=1e-3 --dataset=MNIST
-    $ python train.py --model=MVG --batch_size=100 --lr=1e-2 --dataset=MNIST --n=60000
+    $ python train.py --model=FFGModel --batch_size=100 --lr=1e-3 --dataset=MNIST
+    $ python train.py --model=MVGModel --batch_size=100 --lr=1e-2 --dataset=MNIST --n=60000
 
 ### Visualize
 - To visualize intermediate results and loss plots, run `python -m visdom.server` and go to the URL http://localhost:8097
